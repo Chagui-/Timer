@@ -31,6 +31,8 @@
 
 class Event
 {
+private:
+  void start();
 
 public:
   Event(void);
@@ -41,6 +43,7 @@ public:
   int repeatCount;
   uint8_t pin;
   uint8_t pinState;
+  unsigned long delay;
   void (*callback)(void);
   unsigned long lastEventTime;
   int count;

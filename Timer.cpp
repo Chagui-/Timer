@@ -43,7 +43,8 @@ int8_t Timer::every(unsigned long period, void (*callback)(), int repeatCount)
 	_events[i].repeatCount = repeatCount;
 	_events[i].callback = callback;
 	_events[i].lastEventTime = millis();
-	_events[i].count = 0;
+	_events[i].count = -1;
+	_events[i].delay = 0;
 	return i;
 }
 
@@ -66,10 +67,28 @@ int8_t Timer::oscillate(uint8_t pin, unsigned long period, uint8_t startingValue
 	_events[i].pin = pin;
 	_events[i].period = period;
 	_events[i].pinState = startingValue;
-	digitalWrite(pin, startingValue);
+	//digitalWrite(pin, startingValue);
 	_events[i].repeatCount = repeatCount * 2; // full cycles not transitions
 	_events[i].lastEventTime = millis();
-	_events[i].count = 0;
+	_events[i].count = -1;
+	_events[i].delay = 0;
+	return i;
+}
+
+int8_t Timer::oscillate(uint8_t pin, uint32_t delay, unsigned long period, uint8_t startingValue, int repeatCount)
+{
+	int8_t i = findFreeEventIndex();
+	if (i == NO_TIMER_AVAILABLE) return NO_TIMER_AVAILABLE;
+
+	_events[i].eventType = EVENT_OSCILLATE;
+	_events[i].pin = pin;
+	_events[i].period = period;
+	_events[i].pinState = startingValue;
+	//digitalWrite(pin, startingValue);
+	_events[i].repeatCount = repeatCount * 2; // full cycles not transitions
+	_events[i].lastEventTime = millis();
+	_events[i].count = -1;
+	_events[i].delay = delay;
 	return i;
 }
 
@@ -88,8 +107,22 @@ int8_t Timer::pulse(uint8_t pin, unsigned long period, uint8_t startingValue)
 }
 
 /**
- * This method will generate a pulse of startingValue, starting immediately and of
- * length period. The pin will be left in the !startingValue state
+ * This method will generate a pulse of pulseValue, occuring delay after the
+ * call of this method and lasting for period. The Pin will be left in !pulseValue.
+ */
+int8_t Timer::pulse(uint8_t pin,uint32_t delay, unsigned long period, uint8_t pulseValue)
+{
+	int8_t id(oscillate(pin, period, !pulseValue, 1));
+	// now fix the repeat count
+	if (id >= 0 && id < MAX_NUMBER_OF_EVENTS) {
+		_events[id].delay = delay;
+	}
+	return id;
+}
+
+/**
+ * This method will generate a pulse of pulseValue, starting immediately and of
+ * length period. The pin will be left in the !pulseValue state
  */
 int8_t Timer::pulseImmediate(uint8_t pin, unsigned long period, uint8_t pulseValue)
 {

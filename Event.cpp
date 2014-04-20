@@ -42,6 +42,13 @@ void Event::update(void)
 
 void Event::update(unsigned long now)
 {
+	if (count < 0){
+		if (int32_t(now - delay - lastEventTime) < 0) return;
+		else {
+			start();
+			lastEventTime = now;
+		}
+	}
 	if (now - lastEventTime >= period)
 	{
 		switch (eventType)
@@ -62,4 +69,18 @@ void Event::update(unsigned long now)
 	{
 		eventType = EVENT_NONE;
 	}
+}
+
+void Event::start(){
+	delay = 0;
+	count = 0;
+	switch (eventType)
+		{
+			case EVENT_EVERY:
+				break;
+
+			case EVENT_OSCILLATE:
+				digitalWrite(pin, pinState);
+				break;
+		}
 }
